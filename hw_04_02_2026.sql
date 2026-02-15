@@ -78,6 +78,7 @@ CREATE TABLE GroupsLectures(
 GO
 CREATE TABLE Lectures(
   id int PRIMARY KEY IDENTITY(1,1) not null ,
+  dayOfWeek int not null CHECK (dayOfWeek>=1 and dayOfWeek<=7),
   lectureRoom NVARCHAR(max) not null CHECK(len(lectureRoom)!=0),
   id_subject int FOREIGN key REFERENCES Subjects(id)
   on DELETE CASCADE on UPDATE CASCADE not null,
@@ -200,7 +201,7 @@ VALUES
 (5, 9), (5, 7),
 -- FA-301
 (6,10), (6, 2);
-
+                    --#1
 --1
 SELECT name,finansing,id FROM Departments
 --2
@@ -235,7 +236,7 @@ SELECT name FROM Groups where [year]=5 and rating BETWEEN 2 and 4
 --15
 SELECT surname FROM Teachers where IsAssistant=1 and salary <550 or premium<200
 
---Групірування даних, зв'язок many to many, аномалії
+--2--Групірування даних, зв'язок many to many, аномалії
 
 --1
 SELECT t.name,t.surname, g.name as NameGroups
@@ -306,3 +307,56 @@ Inner JOIN Subjects s on s.id=l.id_subject
 INNER join GroupsLectures gl on gl.id_lecture=l.id
 inner join Groups g on g.id=gl.id_group
 where lectureRoom='A-103'
+
+--3--Функції агрегування
+
+--1
+select Count(t.id) as CounterTeacher
+FROM Teachers t 
+INNER JOIN Lectures l on l.id_teacher=t.id
+INNER JOIN GroupsLectures gl on gl.id_lecture=l.id
+INNER JOIN Groups g on g.id=gl.id_group
+INNER JOIN Departments d on d.id=g.id_departnent
+WHERE d.name='Software Development'
+--2
+SELECT COUNT(l.id) as counterLecture
+FROM Lectures l 
+INNER JOIN Teachers t on t.id=l.id_teacher
+where t.name='Andrew'
+--3
+select COUNT(l.id) as counterI
+FROM Lectures l 
+INNER JOIN GroupsLectures gl on gl.id_lecture=l.id
+inner join Groups g on g.id=gl.id_group
+WHERE l.lectureRoom ='B-202'
+--4 
+SELECT lectureRoom,COUNT(*) as lecture_count
+FROM Lectures
+GROUP by lectureRoom
+--5 
+
+
+
+--6 
+SELECT AVG(x.salary) AS AvgSalary
+FROM (
+    SELECT DISTINCT t.id, t.salary
+    FROM Teachers t
+    INNER JOIN Lectures l        ON l.id_teacher = t.id
+    INNER JOIN GroupsLectures gl ON gl.id_lecture = l.id
+    INNER JOIN Groups g          ON g.id = gl.id_group
+    INNER JOIN Departments d     ON d.id = g.id_departnent
+    INNER JOIN Faculties f       ON f.id = d.id_faculties
+    WHERE f.name = 'Faculty of Computer Science'
+) x;
+--7
+SELECT AVG(finansing) as finDep
+FROM Departments
+--8
+
+
+
+--Підзапити
+
+
+
