@@ -1,5 +1,6 @@
 USE Akademy
 USE master;
+
 GO
 
 
@@ -17,6 +18,8 @@ GO
 DROP TABLE Faculties
 GO
 DROP TABLE Teachers
+GO
+DROP TABLE Lectures
 -- drop
 CREATE table Groups
 (
@@ -76,6 +79,7 @@ CREATE TABLE GroupsLectures(
   on DELETE CASCADE on UPDATE CASCADE not null,
 )
 GO
+
 CREATE TABLE Lectures(
   id int PRIMARY KEY IDENTITY(1,1) not null ,
   dayOfWeek int not null CHECK (dayOfWeek>=1 and dayOfWeek<=7),
@@ -90,117 +94,146 @@ CREATE TABLE Subjects (
   id int PRIMARY KEY IDENTITY(1,1) not null ,
   name nvarchar(100) not NULL CHECK (len(name)!=0) UNIQUE,
 )
+go 
+create table [Students]
+(
+	[Id] int not null identity(1, 1) primary key,
+	[Name] nvarchar(max) not null check ([Name] <> N''),
+	[Rating] int not null check ([Rating] between 0 and 5),
+	[Surname] nvarchar(max) not null check ([Surname] <> N'')
+);
 
-
+CREATE TABLE GropsStudents
+(
+  id int PRIMARY KEY IDENTITY(1,1) not null ,
+  id_student int FOREIGN key REFERENCES Students(id)
+  on DELETE CASCADE on UPDATE CASCADE not null,
+    id_group int FOREIGN key REFERENCES Groups(id)
+  on DELETE CASCADE on UPDATE CASCADE not null,
+)
 /* 1) Faculties */
-INSERT INTO Faculties (dean, name, financing)
-VALUES
-(N'John McArthur', N'Faculty of Computer Science', 250000),
-(N'Anna Kowalska', N'Faculty of Engineering', 180000),
-(N'Robert Smith',  N'Faculty of Business', 120000);
+INSERT INTO Faculties (dean, name, financing) VALUES
+(N'John Smith', N'IT корпус', 250000),
+(N'Emma Brown', N'Business корпус', 180000),
+(N'Oliver Wilson', N'Engineering корпус', 220000);
 GO
 
-/* 2) Departments (id_faculties -> Faculties.id) */
-INSERT INTO Departments (finansing, name, id_faculties)
-VALUES
-(60000,  N'Software Development', 1),
-(45000,  N'Cybersecurity',        1),
-(50000,  N'Computer Networks',    1),
-(70000,  N'Mechanical Eng.',      2),
-(40000,  N'Finance & Accounting', 3);
+/* 2) Departments */
+INSERT INTO Departments (finansing, name, id_faculties) VALUES
+(120000, N'Software Development', 1),
+( 90000, N'Cyber Security', 1),
+( 70000, N'QA & Testing', 1),
+(110000, N'Accounting', 2),
+( 60000, N'Marketing', 2),
+(130000, N'Electrical Engineering', 3);
 GO
 
-/* 3) Groups (id_departnent -> Departments.id) */
-INSERT INTO Groups (name, rating, year, id_departnent)
-VALUES
-('SD-101', 4.6, 1, 1),
-('SD-201', 4.2, 2, 1),
-('CS-101', 4.4, 1, 2),
-('NET-101', 4.1, 1, 3),
-('ME-201', 3.8, 2, 4),
-('FA-301', 4.0, 3, 5);
+/* 3) Groups */
+INSERT INTO Groups (name, rating, year, id_departnent) VALUES
+('SD-501', 4.6, 5, 1),   -- Software Development (5 курс)
+('SD-502', 4.2, 5, 1),   -- Software Development (5 курс)
+('CS-301', 3.9, 3, 2),   -- Cyber Security
+('QA-201', 4.1, 2, 3),   -- QA & Testing
+('AC-401', 3.7, 4, 4);   -- Accounting
 GO
 
 /* 4) Teachers */
-INSERT INTO Teachers (employmentDate, name, IsAssistant, IsProfessor, POSITION, surname, premium, salary)
-VALUES
-('2012-09-01', N'Andrew', 0, 1, N'Professor',        N'Brown',   1500, 6500),
-('2018-02-10', N'Olivia', 1, 0, N'Assistant',        N'Wilson',   500, 3200),
-('2016-11-25', N'Mateusz',0, 0, N'Lecturer',         N'Nowak',    800, 4200),
-('2010-05-12', N'Sophia', 0, 1, N'Head of кафедра',  N'Johnson', 2000, 7000),
-('2020-03-01', N'Yaroslav',1, 0, N'Assistant',       N'Shevchenko',400, 3000),
-('2014-07-19', N'Emma',   0, 0, N'Lecturer',         N'Taylor',   900, 4500),
-('2019-01-15', N'James',  0, 0, N'Lecturer',         N'Clark',    700, 4100),
-('2005-10-03', N'Natalia',0, 1, N'Professor',        N'Ivanko',  2500, 7800);
+INSERT INTO Teachers (employmentDate, name, IsAssistant, IsProfessor, [POSITION], surname, premium, salary) VALUES
+('2012-09-01', N'Michael', 0, 1, N'Professor', N'Johnson', 2000, 8000),
+('2018-02-15', N'Sarah',   1, 0, N'Assistant', N'Davis',   800,  4200),
+('2015-11-20', N'Daniel',  0, 0, N'Lecturer',  N'Miller',  900,  5000),
+('2020-01-10', N'Laura',   1, 0, N'Assistant', N'Anderson',700,  3900);
 GO
 
 /* 5) Subjects */
-INSERT INTO Subjects (name)
-VALUES
-(N'C# Basics'),
-(N'Databases (SQL)'),
-(N'Computer Networks'),
+INSERT INTO Subjects (name) VALUES
+(N'Databases'),
 (N'Algorithms'),
-(N'OOP'),
-(N'Web Development'),
-(N'Operating Systems'),
-(N'Cybersecurity Fundamentals'),
-(N'Linear Algebra'),
-(N'Accounting');
+(N'Backend Development'),
+(N'Software Architecture'),
+(N'Testing Fundamentals');
 GO
 
-/* 6) Lectures (id_subject -> Subjects.id, id_teacher -> Teachers.id) */
-INSERT INTO Lectures (lectureRoom, id_subject, id_teacher)
-VALUES
-(N'A-101',  1, 3),  -- C# Basics / Mateusz Nowak
-(N'A-102',  2, 6),  -- SQL / Emma Taylor
-(N'B-201',  3, 7),  -- Networks / James Clark
-(N'A-103',  4, 1),  -- Algorithms / Prof Brown
-(N'A-104',  5, 3),  -- OOP / Mateusz
-(N'C-301',  8, 8),  -- Cybersecurity / Prof Ivanko
-(N'B-202',  7, 1),  -- OS / Prof Brown
-(N'D-110',  6, 6),  -- Web / Emma
-(N'E-210',  9, 4),  -- Linear Algebra / Prof Johnson
-(N'F-105', 10, 8);  -- Accounting / Prof Ivanko
+/* 6) Lectures
+   (створимо 12 пар у межах 1-го тижня (дні 1..7) для групи SD-501) */
+INSERT INTO Lectures (dayOfWeek, lectureRoom, id_subject, id_teacher) VALUES
+(1, N'A-101', 1, 1),
+(1, N'A-101', 2, 1),
+(2, N'A-102', 3, 3),
+(2, N'A-102', 4, 1),
+(3, N'A-201', 1, 3),
+(3, N'A-201', 2, 3),
+(4, N'A-202', 3, 1),
+(4, N'A-202', 4, 1),
+(5, N'A-301', 1, 2),
+(5, N'A-301', 5, 2),
+(6, N'A-401', 4, 1),
+(7, N'A-402', 3, 3);
 GO
 
-/* 7) Curators */
-INSERT INTO Curators (name, surname)
-VALUES
-(N'Maria',  N'Anderson'),
-(N'Igor',   N'Petrenko'),
-(N'Kate',   N'Miller'),
-(N'Bohdan', N'Koval'),
-(N'Lisa',   N'Scott'),
-(N'Roman',  N'Kharchenko');
-GO
-
-/* 8) GropsCurators (зв’язок куратор ↔ група) */
-INSERT INTO GropsCurators (id_curator, id_group)
-VALUES
+/* 7) GroupsLectures
+   Прив’яжемо всі 12 лекцій до групи SD-501 (це Group.Id = 1 у нашій вставці) */
+INSERT INTO GroupsLectures (id_group, id_lecture) VALUES
 (1, 1),
-(2, 2),
-(3, 3),
-(4, 4),
-(5, 5),
-(6, 6);
+(1, 2),
+(1, 3),
+(1, 4),
+(1, 5),
+(1, 6),
+(1, 7),
+(1, 8),
+(1, 9),
+(1,10),
+(1,11),
+(1,12);
 GO
 
-/* 9) GroupsLectures (зв’язок група ↔ лекція) */
-INSERT INTO GroupsLectures (id_group, id_lecture)
-VALUES
--- SD-101
-(1, 1), (1, 2), (1, 5), (1, 4),
--- SD-201
-(2, 5), (2, 2), (2, 4), (2, 7), (2, 8),
--- CS-101
-(3, 6), (3, 2), (3, 8), (3, 7),
--- NET-101
-(4, 3), (4, 2), (4, 7),
--- ME-201
-(5, 9), (5, 7),
--- FA-301
-(6,10), (6, 2);
+/* Додатково: кілька лекцій для SD-502 (Group.Id = 2) */
+INSERT INTO GroupsLectures (id_group, id_lecture) VALUES
+(2, 1),
+(2, 3),
+(2, 5),
+(2, 7),
+(2, 9);
+GO
+
+/* 8) Curators */
+INSERT INTO Curators (name, surname) VALUES
+(N'Kevin', N'Thomas'),
+(N'Emily', N'Moore'),
+(N'Ryan',  N'Taylor');
+GO
+
+/* 9) GropsCurators (зв’язок куратор-група) */
+INSERT INTO GropsCurators (id_curator, id_group) VALUES
+(1, 1),  -- Kevin -> SD-501
+(2, 2),  -- Emily -> SD-502
+(3, 3);  -- Ryan  -> CS-301
+GO
+
+/* 10) Students */
+INSERT INTO Students ([Name], [Rating], [Surname]) VALUES
+(N'John',   5, N'Smith'),
+(N'Emily',  4, N'Johnson'),
+(N'Daniel', 3, N'Brown'),
+(N'Sarah',  4, N'Wilson'),
+(N'Michael',2, N'Davis'),
+(N'Laura',  5, N'Miller'),
+(N'Emma',   4, N'Anderson'),
+(N'Oliver', 3, N'Thomas'),
+(N'Ryan',   1, N'Moore'),
+(N'Kevin',  4, N'Taylor'),
+(N'Sophia', 5, N'Walker'),
+(N'James',  2, N'Hall');
+GO
+
+/* 11) GropsStudents (розподіл студентів по групах) */
+INSERT INTO GropsStudents (id_student, id_group) VALUES
+(1, 1),(2, 1),(3, 1),(4, 1),(5, 1),(6, 1),  -- SD-501
+(7, 2),(8, 2),(9, 2),                       -- SD-502
+(10,3),(11,3),                              -- CS-301
+(12,4);                                     -- QA-201
+GO
                     --#1
 --1
 SELECT name,finansing,id FROM Departments
@@ -357,6 +390,25 @@ FROM Departments
 
 
 --Підзапити
-
-
-
+--1
+SELECT f.id as facultFinan
+from Faculties f 
+JOIN Departments d on d.id_faculties=f.id
+GROUP by f.id
+HAVING SUM(d.finansing)>100000
+--2
+SELECT g.name
+FROM Groups g
+JOIN Departments d ON d.id = g.id_departnent
+WHERE g.year = 5
+  AND d.name =N'Software Development'
+  AND g.id IN (
+      SELECT gl.id_group
+      FROM GroupsLectures gl
+      JOIN Lectures l ON l.id = gl.id_lecture
+      WHERE l.dayOfWeek BETWEEN 1 AND 7
+      GROUP BY gl.id_group
+      HAVING COUNT(*) > 10
+  );
+  --3
+select
