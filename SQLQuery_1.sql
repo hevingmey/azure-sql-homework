@@ -25,7 +25,7 @@ DROP TABLE bookToGenres
 CREATE TABLE books(
   id INT PRIMARY KEY IDENTITY(1,1),
   title nvarchar(70) NOT NULL,
-  price DECIMAL (10,2) not null CHECK (price>0),
+  price DECIMAL (10,2) not null CHECK (price>=0),
   [year] int NOT NULL CHECK ([year]>=1800 AND [year]<=YEAR(GETDATE())),
   author_id int FOREIGN KEY REFERENCES authors(id)
 	ON DELETE CASCADE ON UPDATE CASCADE,
@@ -50,17 +50,17 @@ INSERT INTO authors (name, surname) VALUES
 ('Mark', 'Twain'),
 ('Arthur', 'Doyle');
 GO
-INSERT INTO books (title, [year], price, author_id) VALUES
-('The Shining', 1977, 15.99, 1),
-('Murder on the Orient Express', 1934, 12.50, 2),
-('Harry Potter and the Philosopher''s Stone', 1997, 20.00, 3),
-('1984', 1949, 14.30, 4),
-('Pride and Prejudice', 1813, 10.99, 5),
-('The Old Man and the Sea', 1952, 13.45, 6),
-('Adventures of Huckleberry Finn', 1884, 11.25, 7),
-('Sherlock Holmes: A Study in Scarlet', 1887, 16.75, 8),
-('Animal Farm', 1945, 9.99, 4),
-('It', 1986, 18.60, 1);
+INSERT INTO books (title, [year], price, author_id,jenry_id) VALUES
+('The Shining', 1977, 15.99, 1,1),
+('Murder on the Orient Express', 1934, 12.50, 2,2),
+('Harry Potter and the Philosopher''s Stone', 1997, 20.00, 3,3),
+('1984', 1949, 14.30, 4,4),
+('Pride and Prejudice', 1813, 10.99, 5,5),
+('The Old Man and the Sea', 1952, 13.45, 6,6),
+('Adventures of Huckleberry Finn', 1884, 11.25, 7,7),
+('Sherlock Holmes: A Study in Scarlet', 1887, 16.75, 8,8),
+('Animal Farm', 1945, 9.99, 4,4),
+('It', 1986, 18.60, 1,1);
 
 INSERT INTO jenre (genre) VALUES 
 ('Fantasy'),
@@ -165,3 +165,92 @@ GROUP BY year;
  SELECT avg (price) from books where year >1830
  SELECT * FROM authors
  SELECT * from books
+
+
+CREATE VIEW book_store_authors_view
+as
+ SELECT b.title, b.id , b.price, b.[year],j.genre
+from jenre j 
+join books b on b.jenry_id=j.id
+go 
+
+DROP VIEW book_store_authors_view
+
+SELECT title , price , genre from book_store_authors_view where price>12 and genre!='Fantasy'
+
+SELECT * FROM book_store_authors_view
+
+
+--тригер 
+CREATE TABLE authorsLogs (
+  id int PRIMARY KEY IDENTITY(1,1),
+  id_author int FOREIGN KEY REFERENCES authors(id),
+  content NVARCHAR(100) not null 
+
+)
+
+CREATE TRIGGER authorsLogTriger
+on authors 
+after INSERT 
+as 
+BEGIN
+    SELECT INSERTED.id, 'New author added with ID: ' + CONVERT(NVARCHAR(10), INSERTED.id)
+    FROM INSERTED;
+END;
+
+go 
+ SELECT * FROM authorsLogs
+
+ go 
+ INSERT into authors(name,surname)values('test name','test surname')
+
+
+ alter TABLE books 
+ add is_active BIT DEFAULT(1)
+ go 
+ SELECT * FROM books
+ go 
+ UPDATE books set is_active=1
+go 
+ALTER TABLE books
+DROP CONSTRAINT f
+
+ CREATE TRIGGER booksDeleteTriger
+ on books 
+ INSTEAD of DELETE
+ as 
+ BEGIN
+ UPDATE books set is_active=0
+ where id in (
+  select id from deleted )
+ print('you can not delete')
+ END
+
+ go
+ DROP TRIGGER booksDeleteTriger
+ go 
+ DELETE from books where id in (2,3)
+ go 
+ SELECT * FROM books
+ go
+
+ALTER TABLE authors
+add discount DECIMAL DEFAULT(0)
+go 
+
+
+CREATE TRIGGER discountTriger_r
+on authors 
+after UPDATE 
+as 
+BEGIN
+UPDATE b
+set b.price=b.price - i.discount 
+from books b 
+INNER join inserted i on i.id=b.author_id
+end 
+
+SELECT * from authors
+
+UPDATE authors 
+set discount =4
